@@ -1,0 +1,43 @@
+services:
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: yourpassword
+      MYSQL_DATABASE: yourdatabase
+      MYSQL_USER: youruser
+      MYSQL_PASSWORD: yourpassword
+    networks:
+      - internal_network
+    ports:
+      - '3306'
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: always
+
+  redis:
+    image: redis:latest
+    ports:
+      - '6379'
+    networks:
+      - internal_network
+    volumes:
+      - redis-data:/data
+    restart: always
+
+  yahs:
+    image: openjdk:21-jdk-slim
+    volumes:
+      - ./app:/app
+    working_dir: /app
+    command: /bin/sh -c "while true; do sleep 1000; done"
+    networks:
+      - internal_network
+    restart: always
+
+volumes:
+  mysql-data:
+  redis-data:
+
+networks:
+  internal_network:
+    driver: bridge
