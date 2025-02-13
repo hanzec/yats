@@ -1,0 +1,23 @@
+<!-- ehcache.xml -->
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd">
+
+    <!-- 定义一个默认的全局缓存模板 -->
+    <defaultCache
+            maxEntriesLocalHeap="10000"
+            eternal="false"
+            timeToIdleSeconds="120"
+            timeToLiveSeconds="120"
+            diskExpiryThreadIntervalSeconds="120"
+            memoryStoreEvictionPolicy="LRU">
+    </defaultCache>
+
+<!--    &lt;!&ndash; 针对特定实体类的缓存配置 &ndash;&gt;-->
+<!--    <cache name="com.example.yourpackage.YourEntity"-->
+<!--           maxEntriesLocalHeap="1000"-->
+<!--           eternal="false"-->
+<!--           timeToIdleSeconds="300"-->
+<!--           timeToLiveSeconds="600"-->
+<!--           statistics="true">-->
+<!--    </cache>-->
+</ehcache>

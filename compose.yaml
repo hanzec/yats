@@ -2,10 +2,10 @@ services:
   mysql:
     image: mysql:latest
     environment:
-      MYSQL_ROOT_PASSWORD: yourpassword
-      MYSQL_DATABASE: yourdatabase
-      MYSQL_USER: youruser
-      MYSQL_PASSWORD: yourpassword
+      MYSQL_USER: yahs_user
+      MYSQL_PASSWORD: yahs_password
+      MYSQL_DATABASE: yahs
+      MYSQL_ROOT_PASSWORD: root_password
     networks:
       - internal_network
     ports:
@@ -22,16 +22,6 @@ services:
       - internal_network
     volumes:
       - redis-data:/data
-    restart: always
-
-  yahs:
-    image: openjdk:21-jdk-slim
-    volumes:
-      - ./app:/app
-    working_dir: /app
-    command: /bin/sh -c "while true; do sleep 1000; done"
-    networks:
-      - internal_network
     restart: always
 
 volumes:
