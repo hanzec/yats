@@ -2,7 +2,7 @@ package com.hanzec.yats.model.data.management;
 
 import com.google.gson.annotations.Expose;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 

@@ -1,0 +1,6 @@
+springdoc:
+  version: '@springdoc.version@'
+  swagger-ui:
+    use-root-path: true
+  paths-to-match: /api/**
+  packagesToScan: com.hanzec.P2PFileSyncServer.controller

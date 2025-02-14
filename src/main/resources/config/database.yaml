@@ -1,0 +1,24 @@
+spring:
+  jpa:
+    properties:
+      hibernate:
+        cache:
+          javax:
+            cache:
+              uri: META-INF/ehcache.xml
+              provider: org.ehcache.jsr107.EhcacheCachingProvider
+          use_second_level_cache: true
+        ddl-auto: update
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: true
+  cache:
+    jcache:
+      config: classpath:/META-INF/ehcache.xml
+  datasource:
+    url: jdbc:mysql://127.0.0.1:13306/${YAHS_DB_NAME:yahs}
+    username: ${YAHS_DB_USERNAME:yahs_user}
+    password: ${YAHS_DB_PASSWORD:yahs_password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  mvc:
+    converters:
+      preferred-json-mapper: gson

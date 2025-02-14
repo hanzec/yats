@@ -1,39 +1,10 @@
-server:
-  port: 80
-
-springdoc:
-  version: '@springdoc.version@'
-  swagger-ui:
-    use-root-path: true
-  paths-to-match: /api/**
-  packagesToScan: com.hanzec.P2PFileSyncServer.controller
-
 spring:
-  cache:
-    type: redis
+  config:
+    import:
+      - "classpath:/config/compose.yaml"
+      - "classpath:/config/database.yaml"
+      - "classpath:/config/springdoc.yaml"
+  profiles:
+    active: dev
   application:
     name: 'yahs'
-  jpa:
-    properties:
-      hibernate:
-        hbm2ddl:
-          auto: update
-        cache:
-          javax:
-            cache:
-              uri: META-INF/ehcache.xml
-              provider: org.ehcache.jsr107.EhcacheCachingProvider
-          use_second_level_cache: true
-        ddl-auto: update
-        default_schema: public
-        enable_lazy_load_no_trans: true
-        dialect: org.hibernate.dialect.MySql5Dialect
-    open-in-view: true
-  datasource:
-    url: jdbc:mysql://mysql:3306/${YAHS_DB_NAME:yahs}
-    username: ${YAHS_DB_USERNAME:yahs_user}
-    password: ${YAHS_DB_PASSWORD:yahs_password}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  mvc:
-    converters:
-      preferred-json-mapper: gson
