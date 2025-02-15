@@ -3,11 +3,14 @@ package com.hanzec.yats.model.data.management;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 @Entity
 @Table(
@@ -16,7 +19,7 @@ import org.springframework.security.core.userdetails.UserDetails;
                 @UniqueConstraint(columnNames = "id"),
                 @UniqueConstraint(columnNames = "IP_ADDRESS")
         })
-public class User implements UserDetails, Serializable {
+public class User implements UserDetails, Serializable, OAuth2User {
     @Getter
     @Id
     @Column(name = "id")
@@ -24,9 +27,22 @@ public class User implements UserDetails, Serializable {
     private String id;
 
     @Getter
+    @Column(name = "jwt_key")
+    private String jwtKey;
+
+    public User() {
+        this.jwtKey = UUID.randomUUID().toString();
+    }
+
+    @Getter
     @ManyToOne
     @JoinColumn(name = "user")
     private Group group;
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return Map.of();
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -61,5 +77,10 @@ public class User implements UserDetails, Serializable {
     @Override
     public boolean isEnabled() {
         return UserDetails.super.isEnabled();
+    }
+
+    @Override
+    public String getName() {
+        return "";
     }
 }

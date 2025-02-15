@@ -1,13 +1,10 @@
-package com.hanzec.yats.service.security;
+package com.hanzec.yats.service.security.provider;
 
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.stereotype.Component;
 
-@Component
-public class PasswordAuthenticationProvider implements AuthenticationProvider {
-
+public class TailscaleOAuth2AuthenticationProvide implements AuthenticationProvider {
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         return null;
