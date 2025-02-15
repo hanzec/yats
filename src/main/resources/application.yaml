@@ -1,6 +1,7 @@
 spring:
   config:
     import:
+      - "classpath:/config/oauth.yaml"
       - "classpath:/config/compose.yaml"
       - "classpath:/config/database.yaml"
       - "classpath:/config/springdoc.yaml"

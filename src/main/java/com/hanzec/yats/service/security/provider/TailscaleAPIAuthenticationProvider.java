@@ -27,6 +27,8 @@ import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import java.text.ParseException;
+
 @Component
 public class TailscaleAPIAuthenticationProvider
         implements AuthenticationProvider, InitializingBean, MessageSourceAware {
@@ -36,10 +38,6 @@ public class TailscaleAPIAuthenticationProvider
     protected MessageSourceAccessor messages = SpringSecurityMessageSource.getAccessor();
 
     private UserCache userCache = new NullUserCache();
-
-    private UserDetailsChecker preAuthenticationChecks = new DefaultPreAuthenticationChecks();
-
-    private UserDetailsChecker postAuthenticationChecks = new DefaultPostAuthenticationChecks();
 
     private final AccountService userDetailsService;
 
@@ -57,7 +55,7 @@ public class TailscaleAPIAuthenticationProvider
     private UserDetails retrieveUser(APIAuthenticationToken token) throws AuthenticationException {
         UserDetails loadedUser;
         try {
-            loadedUser = this.userDetailsService.loadUserByUsername(token.getPrincipal());
+            loadedUser = this.userDetailsService.loadUserByUsername((String) token.getPrincipal());
         } catch (UsernameNotFoundException notFound) {
             throw notFound;
         } catch (Exception repositoryProblem) {
@@ -91,6 +89,27 @@ public class TailscaleAPIAuthenticationProvider
         }
     }
 
+    public void preAuthenticationCheck(UserDetails user) {
+        if (!user.isAccountNonLocked()) {
+            TailscaleAPIAuthenticationProvider.this.logger
+                    .debug("Failed to authenticate since user account is locked");
+            throw new LockedException(TailscaleAPIAuthenticationProvider.this.messages
+                    .getMessage("TailscaleAPIAuthenticationProvide.locked", "User account is locked"));
+        }
+        if (!user.isEnabled()) {
+            TailscaleAPIAuthenticationProvider.this.logger
+                    .debug("Failed to authenticate since user account is disabled");
+            throw new DisabledException(TailscaleAPIAuthenticationProvider.this.messages
+                    .getMessage("TailscaleAPIAuthenticationProvide.disabled", "User is disabled"));
+        }
+        if (!user.isAccountNonExpired()) {
+            TailscaleAPIAuthenticationProvider.this.logger
+                    .debug("Failed to authenticate since user account has expired");
+            throw new AccountExpiredException(TailscaleAPIAuthenticationProvider.this.messages
+                    .getMessage("TailscaleAPIAuthenticationProvide.expired", "User account has expired"));
+        }
+    }
+
     public void postAuthenticationCheck(UserDetails user) {
         if (!user.isCredentialsNonExpired()) {
             TailscaleAPIAuthenticationProvider.this.logger
@@ -121,7 +140,7 @@ public class TailscaleAPIAuthenticationProvider
 
         // authenticate user by verifying jwt signature
         try {
-            this.preAuthenticationChecks.check(user);
+            preAuthenticationCheck(user);
             verifyJWTSignature((User) user, (APIAuthenticationToken) authentication);
         } catch (AuthenticationException ex) {
             if (!cacheWasUsed) {
@@ -131,7 +150,7 @@ public class TailscaleAPIAuthenticationProvider
             // we're using latest data (i.e. not from the cache)
             cacheWasUsed = false;
             user = retrieveUser((APIAuthenticationToken) authentication);
-            this.preAuthenticationChecks.check(user);
+            preAuthenticationCheck(user);
             verifyJWTSignature((User) user, (APIAuthenticationToken) authentication);
         }
 
@@ -143,7 +162,11 @@ public class TailscaleAPIAuthenticationProvider
             this.userCache.putUserInCache(user);
         }
         Object principalToReturn = user;
-        return createSuccessAuthentication(principalToReturn, authentication, user);
+        try {
+            return createSuccessAuthentication(principalToReturn, authentication, user);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -163,13 +186,13 @@ public class TailscaleAPIAuthenticationProvider
      */
     protected Authentication createSuccessAuthentication(Object principal,
                                                          Authentication authentication,
-                                                         UserDetails user) {
+                                                         UserDetails user) throws ParseException {
         // Ensure we return the original credentials the user supplied,
         // so subsequent attempts are successful even with encoded passwords.
         // Also ensure we return the original getDetails(), so that future
         // authentication events after cache expiry contain the details
-        UsernamePasswordAuthenticationToken result = UsernamePasswordAuthenticationToken.authenticated(principal,
-                authentication.getCredentials(), user.getAuthorities());
+        APIAuthenticationToken result = APIAuthenticationToken.authenticated(principal,
+                (String) authentication.getCredentials(), user.getAuthorities());
         result.setDetails(authentication.getDetails());
         this.logger.debug("Authenticated user");
         return result;
@@ -185,31 +208,5 @@ public class TailscaleAPIAuthenticationProvider
     @Override
     public boolean supports(Class<?> authentication) {
         return (UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication));
-    }
-
-    private class DefaultPreAuthenticationChecks implements UserDetailsChecker {
-
-        @Override
-        public void check(UserDetails user) {
-            if (!user.isAccountNonLocked()) {
-                TailscaleAPIAuthenticationProvider.this.logger
-                        .debug("Failed to authenticate since user account is locked");
-                throw new LockedException(TailscaleAPIAuthenticationProvider.this.messages
-                        .getMessage("TailscaleAPIAuthenticationProvide.locked", "User account is locked"));
-            }
-            if (!user.isEnabled()) {
-                TailscaleAPIAuthenticationProvider.this.logger
-                        .debug("Failed to authenticate since user account is disabled");
-                throw new DisabledException(TailscaleAPIAuthenticationProvider.this.messages
-                        .getMessage("TailscaleAPIAuthenticationProvide.disabled", "User is disabled"));
-            }
-            if (!user.isAccountNonExpired()) {
-                TailscaleAPIAuthenticationProvider.this.logger
-                        .debug("Failed to authenticate since user account has expired");
-                throw new AccountExpiredException(TailscaleAPIAuthenticationProvider.this.messages
-                        .getMessage("TailscaleAPIAuthenticationProvide.expired", "User account has expired"));
-            }
-        }
-
     }
 }
